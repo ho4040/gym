@@ -4,6 +4,17 @@ import numpy as np
 import random
 env = gym.make('CartPole-v0')
 
+"""
+This example is model based RL
+first, find transition model from samples
+
+check "Model-free policy iteration" from 
+http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching_files/control.pdf
+
+If we want model free control, we have to change it into Q function(off policy) based.
+
+"""
+
 def collect_transition_samples(num):
     samples = []
     state = env.reset()
@@ -16,6 +27,12 @@ def collect_transition_samples(num):
         samples.append([lastState, action, state])
     return samples
 
+transitionProbNet = model.TransitionPropNet()
+transitionProbNet.train(collect_transition_samples(100000), epochs=10)
+
+"""
+then do greedy policy improvement with Monte carlo method
+"""
 def collect_episod_samples(num=1000):
     samples = []
     for _ in range(num):
@@ -40,13 +57,8 @@ def collect_episod_samples(num=1000):
 
     return samples
     
-print("Train transition predict function")
-transitionProbNet = model.TransitionPropNet()
-transitionProbNet.train(collect_transition_samples(100000), epochs=10)
-
-print("Train value predict function")
 mcValueNet = model.McValueNet()
-mcValueNet.train(collect_episod_samples(50000), epochs=100)
+mcValueNet.train(collect_episod_samples(50000), epochs=50)
 
 # play greedy
 actions = [0, 1]
