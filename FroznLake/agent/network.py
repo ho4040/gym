@@ -1,28 +1,33 @@
 import tensorflow as tf
 import numpy as np
 
+
 class ActionValueNet:
 	"Q function approximatior"
-	def __init__(self, learning_rete=0.01):
+	def __init__(self, learning_rete=0.01, decay=0.0001, epoch=1):
+		self.decaied_learning_rate = learning_rete
+		self.decay = decay
+		self.epochs = epoch
 		self.build(learning_rete)
 
 	def build(self, learning_rete=0.01):
 		self.model = tf.keras.Sequential()
 		self.model.add(tf.keras.layers.Dense(units=128, activation='relu'))
 		self.model.add(tf.keras.layers.Dense(units=128, activation='relu'))
-		# self.model.add(tf.keras.layers.Dense(units=32, activation='relu'))
 		self.model.add(tf.keras.layers.Dense(units=1, activation=None))
-		opt = tf.keras.optimizers.SGD(lr=learning_rete, decay=1e-4, momentum=0.9, nesterov=True)
-		self.model.compile(optimizer=opt, loss='mean_squared_error')
+		self.opt = tf.keras.optimizers.Adam(lr=learning_rete, decay=self.decay)
+		self.model.compile(optimizer=self.opt, loss='mean_squared_error')
 
-	def train(self, samples, labels, epochs):
-		states = np.array([s['state'] for s in samples])
+	def train(self, samples, labels):
+		states = np.array([[s['state']] for s in samples])
 		actions = np.array([[s['action']] for s in samples])
 		x = np.concatenate([states, actions], axis=1)
-		return self.model.fit(x, np.array(labels), epochs=epochs, verbose=0)
+		
+		return self.model.fit(x, np.array(labels), epochs=self.epochs, verbose=0)
 	
 	def predict(self, state, actions):
-		states = np.array([state.tolist()] * len(actions))
+		size = np.size(np.array(state))
+		states = np.reshape(np.repeat(np.array(state), len(actions)), [-1, size])
 		actions = np.reshape(np.array(actions), [-1, 1])
 		x = np.concatenate([states, actions], axis=1)
 		return self.model.predict(x)
