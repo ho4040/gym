@@ -1,5 +1,5 @@
 import gym
-import agent.network as network
+import policy.network as network
 import numpy as np
 import random
 

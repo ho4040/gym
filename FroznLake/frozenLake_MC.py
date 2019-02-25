@@ -2,7 +2,10 @@ import gym
 import numpy as np
 import random
 
+import policy.table
+
 env = gym.make('FrozenLake-v0')
+
 all_actions = [0,1,2,3]
 
 # Hyper parameters
@@ -10,24 +13,15 @@ gamma = 0.9
 epsilon = 0.5
 batch_size = 1
 
-q_table = {}
-def hash(state, action):
-	return "%d_%d"%(state,action)
+# tabular policy
+q = policy.table.Table()
 
-def get_q_values(state, actions):
-	return [get_q_value(state, x) for x in actions]
-
-def get_q_value(state, action):
-	key = hash(state, action)
-	if key in q_table:
-		return q_table[key]
-	return 0
-
-
+#initialize
 step = 1
 episode = 0
 alpha = 1
 samples = []
+
 for j in range(20000):
 
 	epsilon = epsilon * 0.9999  # decay epsilon
@@ -43,7 +37,7 @@ for j in range(20000):
 		
 		action = env.action_space.sample()
 		if epsilon < random.random():
-			action = np.argmax(get_q_values(state, all_actions))
+			action = np.argmax(q.get_q_values(state, all_actions))
 
 		next_state, reward, terminated, info = env.step(action)
 		trajectory.append([state, action, reward])
@@ -66,6 +60,6 @@ for j in range(20000):
 					visitLog[state] = True # MC with first visit
 					action = trjectory[t][1]
 					gt = sum([(gamma**k) * trjectory[t+k][2] for k in range(0, T-t)])				
-					qVal = get_q_value(state, action)
-					q_table[hash(state, action)] = qVal + alpha*(gt-qVal)
+					qVal = q.get_q_value(state, action)
+					q.update(alpha, state, action, gt)
 		samples = []
