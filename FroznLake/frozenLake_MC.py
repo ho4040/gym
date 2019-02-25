@@ -60,10 +60,13 @@ for j in range(20000):
 		alpha = 1/(episode**0.5)  # GLIE
 		for trjectory in samples:
 			T = len(trjectory)
+			visitLog = {}
 			for t in range(T):
 				state = trjectory[t][0]
-				action = trjectory[t][1]
-				gt = sum([(gamma**k) * trjectory[t+k][2] for k in range(0, T-t)])				
-				qVal = get_q_value(state, action)
-				q_table[hash(state, action)] = qVal + alpha*(gt-qVal)
+				if state in visitLog == False:
+					visitLog[state] = True # MC with first visit
+					action = trjectory[t][1]
+					gt = sum([(gamma**k) * trjectory[t+k][2] for k in range(0, T-t)])				
+					qVal = get_q_value(state, action)
+					q_table[hash(state, action)] = qVal + alpha*(gt-qVal)
 		samples = []
