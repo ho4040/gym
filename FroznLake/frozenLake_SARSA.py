@@ -1,6 +1,5 @@
 import gym
 import gym.spaces
-import agent.network as network
 import numpy as np
 import random
 
